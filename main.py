@@ -15,7 +15,7 @@ from tenacity import stop_after_delay, retry, stop_after_attempt
 
 MAIN_URL = "https://auction.housingworks.org"
 CURRENT_TIMESTAMP = datetime.now(timezone("US/Eastern"))
-HOURS_TO_RUN = (8, 12, 20)
+HOURS_TO_RUN = (9, 12, 21)
 
 latest_csv_filename = "latest_output.csv"
 latest_html_filename = "latest_output.html"
@@ -123,11 +123,10 @@ def check_run_program():
     df = pd.read_csv("latest_output.csv")
     df["auction_end_date"] = pd.to_datetime(df["auction_end_date"])
     for auction_end_date in df["auction_end_date"].unique():
-        print(auction_end_date.strftime("%m/%d/%Y"))
-        print(CURRENT_TIMESTAMP.strftime("%m/%d/%Y"))
-        if (auction_end_date.date == CURRENT_TIMESTAMP.date) and (
-            CURRENT_TIMESTAMP.hour in HOURS_TO_RUN
-        ):
+        if (
+            auction_end_date.strftime("%m/%d/%Y")
+            == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
+        ) and (CURRENT_TIMESTAMP.hour in HOURS_TO_RUN):
             return True
 
 
@@ -141,10 +140,11 @@ def main():
         all_auction_location_items.extend(
             retrieve_auction_location_items(location_auction_url)
         )
-        print(f'complete {location_auction_url}')
+        print(f"complete {location_auction_url}")
     write_to_csv_html(all_auction_location_items)
     send_email(latest_html_filename)
-    print('complete')
+    print("complete")
+
 
 if __name__ == "__main__":
     main()
