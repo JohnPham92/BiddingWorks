@@ -1,4 +1,7 @@
 import requests
+from logging.handlers import TimedRotatingFileHandler
+import logging
+from logging import Formatter, getLogger
 from random import randint
 from bs4 import BeautifulSoup
 from time import sleep
@@ -9,7 +12,7 @@ from pytz import timezone
 from shutil import copyfile
 import pandas as pd
 import os
-from sendgrid import SendGridAPIClient
+from sendgrid import SendGridAPIClient, To
 from sendgrid.helpers.mail import Mail
 from tenacity import stop_after_delay, retry, stop_after_attempt
 
@@ -19,6 +22,17 @@ HOURS_TO_RUN = (9, 12, 21)
 
 latest_csv_filename = "latest_output.csv"
 latest_html_filename = "latest_output.html"
+
+
+def create_logger():
+    logger = getLogger()
+    handler = TimedRotatingFileHandler(filename='logs/runtime.log', when='D', interval=1, backupCount=10, encoding='utf-8',
+                                       delay=False)
+    formatter = Formatter(fmt=f'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return logger
 
 
 @retry(stop=(stop_after_delay(2) | stop_after_attempt(3)))
@@ -48,8 +62,11 @@ def retrieve_auction_location_items(location_auction_url: str) -> list:
     auctions_page = requests.get(location_auction_url)
     auctions_page_soup = BeautifulSoup(auctions_page.text, "html.parser")
     auction_location_items = []
+    item_images = []
+    for thumbnail in auctions_page_soup.findAll("div", attrs={"class": "thumb-list"}):
+        item_images.append(thumbnail.find("img")["src"])
     location_name = auctions_page_soup.find("h2", attrs={"class": "page-title"}).text
-    for thumb in auctions_page_soup.findAll("div", attrs={"class": "thumbpadding"}):
+    for idx, thumb in enumerate(auctions_page_soup.findAll("div", attrs={"class": "thumbpadding"})):
         item_link = thumb.find("a")["href"]
         item_name = thumb.find("div", attrs={"class": "title"}).text
         item_current_bid = thumb.find("span").text
@@ -60,6 +77,7 @@ def retrieve_auction_location_items(location_auction_url: str) -> list:
             [
                 location_name,
                 item_name,
+                item_images[idx],
                 item_current_bid,
                 item_auction_time,
                 item_link,
@@ -67,6 +85,10 @@ def retrieve_auction_location_items(location_auction_url: str) -> list:
             ]
         )
     return auction_location_items
+
+
+def path_to_image_html(path):
+    return '<img src="' + path + '" width="60" >'
 
 
 def write_to_csv_html(all_auction_location_items: list):
@@ -77,6 +99,7 @@ def write_to_csv_html(all_auction_location_items: list):
     header = [
         "loc_name",
         "item_name",
+        "item_image",
         "item_current_bid",
         "item_auction_time",
         "item_link",
@@ -89,7 +112,7 @@ def write_to_csv_html(all_auction_location_items: list):
     )
     df.sort_values("auction_end_date", inplace=True)
     df.to_csv(latest_csv_filename, index_label=False)
-    df.to_html(latest_html_filename, render_links=True, escape=False)
+    df.to_html(latest_html_filename, render_links=True, escape=False, formatters={'item_image': path_to_image_html})
     str_current_time = CURRENT_TIMESTAMP.strftime("%Y%m%d_%H")
     copyfile("latest_output.csv", f"./outputs/{str_current_time}_output.csv")
 
@@ -106,44 +129,49 @@ def send_email(html_filename: str):
     html_file = open(html_filename, "r", encoding="utf-8").read()
     message = Mail(
         from_email="john@johnpham.me",
-        to_emails="john.pham.92@gmail.com",
+        to_emails=[To('john.pham.92@gmail.com')],
         subject=f"Housing Works Run {CURRENT_TIMESTAMP}",
+        is_multiple=True,
         html_content=html_file,
     )
     try:
         sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
         response = sg.send(message)
+        logging.info('Successful Email Sent')
     except Exception as e:
-        print(e.message)
+        logging.warning(e.message)
 
 
 def check_run_program():
     if not exists("latest_output.csv"):
+        logging.info("First run")
         return True
     df = pd.read_csv("latest_output.csv")
     df["auction_end_date"] = pd.to_datetime(df["auction_end_date"])
     for auction_end_date in df["auction_end_date"].unique():
         if (
-            auction_end_date.strftime("%m/%d/%Y")
-            == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
+                auction_end_date.strftime("%m/%d/%Y")
+                == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
         ) and (CURRENT_TIMESTAMP.hour in HOURS_TO_RUN):
+            logging.info("Date of auction end timed run")
             return True
 
 
 def main():
+    create_logger()
     if not check_run_program():
         return
     location_auction_urls = get_location_auctions(MAIN_URL)
     all_auction_location_items = []
     for location_auction_url in location_auction_urls:
-        sleep(randint(1, 4))
+        sleep(randint(0, 2))
         all_auction_location_items.extend(
             retrieve_auction_location_items(location_auction_url)
         )
-        print(f"complete {location_auction_url}")
+        logging.info(f"completed {location_auction_url}")
     write_to_csv_html(all_auction_location_items)
     send_email(latest_html_filename)
-    print("complete")
+    logging.info(f"completed run")
 
 
 if __name__ == "__main__":

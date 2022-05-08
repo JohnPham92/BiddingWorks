@@ -78,6 +78,8 @@ fabric.properties
 
 venv/
 outputs/
+logs/
+
 secrets.pysendgrid.env
 sendgrid.env
 
