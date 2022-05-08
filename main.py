@@ -141,9 +141,10 @@ def main():
         all_auction_location_items.extend(
             retrieve_auction_location_items(location_auction_url)
         )
+        print(f'complete {location_auction_url}')
     write_to_csv_html(all_auction_location_items)
     send_email(latest_html_filename)
-
+    print('complete')
 
 if __name__ == "__main__":
     main()
