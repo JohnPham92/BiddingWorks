@@ -53,6 +53,7 @@ cmake-build-*/
 out/
 
 # mpeltonen/sbt-idea plugin
+.idea/
 .idea_modules/
 
 # JIRA plugin
@@ -86,3 +87,4 @@ sendgrid.env
 *.csv
 *.html
 
+.DS_Store

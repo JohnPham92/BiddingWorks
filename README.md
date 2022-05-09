@@ -8,6 +8,8 @@ Currently, emails with items will be sent at 10 AM, 12 PM, 9 PM on days where th
 Adjust the email recipients and senders as necessary. APIKEY must be registered with Sendgrid for this to work along with a env variable.
 
 Requires an output and logs folder to be created in the root directory to house those files.
+Use this to set the environment variable for sendgrid: 
+https://github.com/sendgrid/sendgrid-python#setup-environment-variables
 
 Note that this doesn't do any bidding on the items.
 
