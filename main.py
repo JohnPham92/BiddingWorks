@@ -20,8 +20,10 @@ MAIN_URL = "https://auction.housingworks.org"
 CURRENT_TIMESTAMP = datetime.now(timezone("US/Eastern"))
 HOURS_TO_RUN = (10, 12, 21)
 
-latest_csv_filename = "latest_output.csv"
-latest_html_filename = "latest_output.html"
+module_path = os.path.dirname(os.path.realpath(__file__))
+
+latest_csv_filename = os.path.join(module_path, "latest_output.csv")
+latest_html_filename = os.path.join(module_path, "latest_output.html")
 
 
 def create_logger() -> object:
