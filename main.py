@@ -187,6 +187,7 @@ def check_run_program() -> bool:
         ) and (CURRENT_TIMESTAMP.hour in HOURS_TO_RUN):
             logging.info("Date of auction end timed run")
             return True
+    logging.info("Checking completed, running not necessary")
 
 
 def main():
