@@ -26,6 +26,7 @@ latest_csv_filename = os.path.join(module_path, "latest_output.csv")
 latest_html_filename = os.path.join(module_path, "latest_output.html")
 logs_filename = os.path.join(module_path, "logs/runtime.log")
 
+
 def create_logger() -> object:
     """
     this creates the logger and the subsequent management
@@ -79,7 +80,7 @@ def retrieve_auction_location_items(location_auction_url: str) -> list:
         item_images.append(thumbnail.find("img")["src"])
     location_name = auctions_page_soup.find("h2", attrs={"class": "page-title"}).text
     for idx, thumb in enumerate(
-        auctions_page_soup.findAll("div", attrs={"class": "thumbpadding"})
+            auctions_page_soup.findAll("div", attrs={"class": "thumbpadding"})
     ):
         item_link = thumb.find("a")["href"]
         item_name = thumb.find("div", attrs={"class": "title"}).text
@@ -134,6 +135,8 @@ def write_to_csv_html(all_auction_location_items: list):
     )
     str_current_time = CURRENT_TIMESTAMP.strftime("%Y%m%d_%H")
     copyfile(latest_csv_filename, os.path.join(module_path, f"outputs/{str_current_time}_output.csv"))
+    logging.info('write to csv, html, and outputs successful')
+
 
 def get_auction_end_date(item_auction_time: str, current_time: datetime) -> datetime:
     """
@@ -183,8 +186,8 @@ def check_run_program() -> bool:
     df["auction_end_date"] = pd.to_datetime(df["auction_end_date"])
     for auction_end_date in df["auction_end_date"].unique():
         if (
-            auction_end_date.strftime("%m/%d/%Y")
-            == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
+                auction_end_date.strftime("%m/%d/%Y")
+                == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
         ) and (CURRENT_TIMESTAMP.hour in HOURS_TO_RUN):
             logging.info("Date of auction end timed run")
             return True
