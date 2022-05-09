@@ -24,7 +24,7 @@ module_path = os.path.dirname(os.path.realpath(__file__))
 
 latest_csv_filename = os.path.join(module_path, "latest_output.csv")
 latest_html_filename = os.path.join(module_path, "latest_output.html")
-
+logs_filename = os.path.join(module_path, "logs/runtime.log")
 
 def create_logger() -> object:
     """
@@ -33,7 +33,7 @@ def create_logger() -> object:
     """
     logger = getLogger()
     handler = TimedRotatingFileHandler(
-        filename="logs/runtime.log",
+        filename=logs_filename,
         when="D",
         interval=1,
         backupCount=10,
@@ -133,8 +133,7 @@ def write_to_csv_html(all_auction_location_items: list):
         formatters={"item_image": path_to_image_html},
     )
     str_current_time = CURRENT_TIMESTAMP.strftime("%Y%m%d_%H")
-    copyfile("latest_output.csv", f"./outputs/{str_current_time}_output.csv")
-
+    copyfile(latest_csv_filename, os.path.join(module_path, f"outputs/{str_current_time}_output.csv"))
 
 def get_auction_end_date(item_auction_time: str, current_time: datetime) -> datetime:
     """
@@ -177,10 +176,10 @@ def check_run_program() -> bool:
     this checks whether the program should execute
     :rtype: bool
     """
-    if not exists("latest_output.csv"):
+    if not exists(latest_csv_filename):
         logging.info("First run")
         return True
-    df = pd.read_csv("latest_output.csv")
+    df = pd.read_csv(latest_csv_filename)
     df["auction_end_date"] = pd.to_datetime(df["auction_end_date"])
     for auction_end_date in df["auction_end_date"].unique():
         if (
