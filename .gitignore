@@ -84,6 +84,8 @@ logs/
 secrets.pysendgrid.env
 sendgrid.env
 
+secrets.py
+
 *.csv
 *.html
 

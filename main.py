@@ -14,6 +14,7 @@ import pandas as pd
 import os
 from sendgrid import SendGridAPIClient, To
 from sendgrid.helpers.mail import Mail
+from secrets import SENDGRID_API_KEY
 from tenacity import stop_after_delay, retry, stop_after_attempt
 
 MAIN_URL = "https://auction.housingworks.org"
@@ -135,8 +136,6 @@ def write_to_csv_html(all_auction_location_items: list):
     )
     str_current_time = CURRENT_TIMESTAMP.strftime("%Y%m%d_%H")
     copyfile(latest_csv_filename, os.path.join(module_path, f"outputs/{str_current_time}_output.csv"))
-    logging.info('write to csv, html, and outputs successful')
-
 
 def get_auction_end_date(item_auction_time: str, current_time: datetime) -> datetime:
     """
@@ -167,7 +166,7 @@ def send_email(html_filename: str):
         html_content=html_file,
     )
     try:
-        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
         logging.info("Successful Email Sent")
     except Exception as e:
