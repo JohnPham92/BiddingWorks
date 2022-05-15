@@ -8,6 +8,7 @@ Adjust the email recipients and senders as necessary.
 
 Requires an output and logs folder to be created in the root directory to house those files.
 Create a secrets.py file that assigns `SENDGRID_API_KEY='YOUR KEY HERE'` Make sure to get the SENDGRID_API_KEY and then use the email registered as the from for API key.
+`EMAILS = [LIST EMAIL ADDRESSES HERE]`
 
 Note that this doesn't do any bidding on the items.
 

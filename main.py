@@ -14,7 +14,7 @@ import pandas as pd
 import os
 from sendgrid import SendGridAPIClient, To
 from sendgrid.helpers.mail import Mail
-from secrets import SENDGRID_API_KEY
+from secrets import SENDGRID_API_KEY, EMAILS
 from tenacity import stop_after_delay, retry, stop_after_attempt
 
 MAIN_URL = "https://auction.housingworks.org"
@@ -150,7 +150,6 @@ def get_auction_end_date(item_auction_time: str, current_time: datetime) -> date
     auction_end_date = current_time + timedelta(minutes=mins, hours=hours, days=days)
     return auction_end_date
 
-
 def send_email(html_filename: str):
     """
     this sends the actual email off to the different recipients
@@ -160,7 +159,7 @@ def send_email(html_filename: str):
     current_timestamp_str = CURRENT_TIMESTAMP.strftime("%Y-%m-%d %H")
     message = Mail(
         from_email="john@johnpham.me",
-        to_emails=[To("john.pham.92@gmail.com")],
+        to_emails=[To(email) for email in EMAILS],
         subject=f"Housing Works Run {current_timestamp_str}",
         is_multiple=True,
         html_content=html_file,
