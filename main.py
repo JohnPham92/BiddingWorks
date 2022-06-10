@@ -19,7 +19,7 @@ from tenacity import stop_after_delay, retry, stop_after_attempt
 
 MAIN_URL = "https://auction.housingworks.org"
 CURRENT_TIMESTAMP = datetime.now(timezone("US/Eastern"))
-HOURS_TO_RUN = (10, 12, 21)
+HOURS_TO_RUN = (20)
 
 module_path = os.path.dirname(os.path.realpath(__file__))
 
