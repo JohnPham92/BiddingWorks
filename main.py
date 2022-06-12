@@ -180,15 +180,9 @@ def check_run_program() -> bool:
     if not exists(latest_csv_filename):
         logging.info("First run")
         return True
-    df = pd.read_csv(latest_csv_filename)
-    df["auction_end_date"] = pd.to_datetime(df["auction_end_date"])
-    for auction_end_date in df["auction_end_date"].unique():
-        if (
-                auction_end_date.strftime("%m/%d/%Y")
-                == CURRENT_TIMESTAMP.strftime("%m/%d/%Y")
-        ) and (CURRENT_TIMESTAMP.hour in HOURS_TO_RUN):
-            logging.info("Date of auction end timed run")
-            return True
+    if CURRENT_TIMESTAMP.hour in HOURS_TO_RUN:
+        logging.info("Time to Run")
+        return True
     logging.info("Checking completed, running not necessary")
 
 
