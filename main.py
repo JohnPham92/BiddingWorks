@@ -19,7 +19,7 @@ from tenacity import stop_after_delay, retry, stop_after_attempt
 
 MAIN_URL = "https://auction.housingworks.org"
 CURRENT_TIMESTAMP = datetime.now(timezone("US/Eastern"))
-HOURS_TO_RUN = (20)
+HOURS_TO_RUN = [20]
 
 module_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -77,9 +77,13 @@ def retrieve_auction_location_items(location_auction_url: str) -> list:
     auctions_page_soup = BeautifulSoup(auctions_page.text, "html.parser")
     auction_location_items = []
     item_images = []
+
+    location_name_object = auctions_page_soup.find("h2", attrs={"class": "page-title"})
+    if location_name_object is None:
+        return
+    location_name = auctions_page_soup.find("h2", attrs={"class": "page-title"}).text
     for thumbnail in auctions_page_soup.findAll("div", attrs={"class": "thumb-list"}):
         item_images.append(thumbnail.find("img")["src"])
-    location_name = auctions_page_soup.find("h2", attrs={"class": "page-title"}).text
     for idx, thumb in enumerate(
             auctions_page_soup.findAll("div", attrs={"class": "thumbpadding"})
     ):
@@ -137,6 +141,7 @@ def write_to_csv_html(all_auction_location_items: list):
     str_current_time = CURRENT_TIMESTAMP.strftime("%Y%m%d_%H")
     copyfile(latest_csv_filename, os.path.join(module_path, f"outputs/{str_current_time}_output.csv"))
 
+
 def get_auction_end_date(item_auction_time: str, current_time: datetime) -> datetime:
     """
     function passed through pandas lambda to take the current time and countdown to determine auction end
@@ -149,6 +154,7 @@ def get_auction_end_date(item_auction_time: str, current_time: datetime) -> date
     mins = int(re.findall(r"(\d+)m", item_auction_time)[0])
     auction_end_date = current_time + timedelta(minutes=mins, hours=hours, days=days)
     return auction_end_date
+
 
 def send_email(html_filename: str):
     """
@@ -194,6 +200,9 @@ def main():
     all_auction_location_items = []
     for location_auction_url in location_auction_urls:
         sleep(randint(0, 2))
+        location_items_list = retrieve_auction_location_items(location_auction_url)
+        if location_items_list is None:
+            continue
         all_auction_location_items.extend(
             retrieve_auction_location_items(location_auction_url)
         )
